@@ -1,26 +1,39 @@
-import { WebSocketServer } from 'ws';
+// server.js
+const express = require("express");
+const http = require("http");
+const WebSocket = require("ws");
 
-const PORT = process.env.PORT || 3000;
-const wss = new WebSocketServer({ port: PORT });
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
-wss.on('connection', (ws) => {
-  console.log('Client connecté');
+// Quand un client se connecte
+wss.on("connection", (ws) => {
+  console.log("Un client WebSocket est connecté");
 
-  ws.on('message', (message) => {
-    // On reçoit un message ou de l'audio (Buffer)
-    console.log('Données reçues:', message);
+  ws.on("message", (message) => {
+    console.log("Reçu :", message.toString());
 
-    // On renvoie à tous les clients connectés
-    wss.clients.forEach(client => {
-      if (client !== ws && client.readyState === ws.OPEN) {
-        client.send(message);
+    // On renvoie le message à tous les clients
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(message.toString());
       }
     });
   });
 
-  ws.on('close', () => {
-    console.log('Client déconnecté');
+  ws.on("close", () => {
+    console.log("Client déconnecté");
   });
 });
 
-console.log(`Serveur WebSocket lancé sur le port ${PORT}`);
+// Route HTTP basique
+app.get("/", (req, res) => {
+  res.send("Serveur WebSocket + HTTP opérationnel 🚀");
+});
+
+// Render utilisera PORT
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`Serveur lancé sur le port ${PORT}`);
+});
